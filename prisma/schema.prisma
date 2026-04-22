@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role{
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id        Int   @id @default(autoincrement())
+  name      String?
+  email     String   @unique
+  password  String
+  tokenVersion   Int      @default(0)
+  role Role @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  
+
+  tasks     Task[]
+  projects   Project[]
+  projectUsers Project_User[]
+  TaskUsers Task_User[]
+}
+
+model Task{
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  status      TaskStatus   @default(PENDING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+
+  createdById Int
+  createdBy   User         @relation(fields: [createdById], references: [id])
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id])
+
+  TaskUsers Task_User[]
+}
+
+model Project {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  createdById Int
+  createdBy   User         @relation(fields: [createdById], references: [id])
+
+  tasks    Task[]
+  users    Project_User[]
+}
+
+model Project_User {
+  projectId String
+  userId    Int
+
+  project   Project @relation(fields: [projectId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
+
+  @@id([projectId, userId])
+}
+
+model Task_User{
+  taskId String
+  userId Int
+
+  task    Task    @relation(fields: [taskId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@id([taskId, userId])
+}
