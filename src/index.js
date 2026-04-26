@@ -26,11 +26,13 @@ const authRoutes = require("./auth/auth.routes");
 const taskRoutes = require("./task/task.routes");
 const projectRoutes = require("./project/project.route");
 const userRoutes = require("./user/user.route");
+const dashboardRoutes = require("./dashboard/dashboard.route");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

@@ -107,17 +107,17 @@ const createProject = async (req, res) => {
  *                 $ref: '#/components/schemas/Project'
  *       401:
  *         description: Unauthorized
+ *       403:
+ *         description: Access denied
+ *       404:
+ *         description: No projects found
+ *       500:
+ *         description: Failed to fetch projects
  */
 const getProjects = async (req, res) => {
   try {
-    const filters = {};
-
-    if (req.user.role !== "ADMIN") {
-      filters.createdById = req.user.id;
-    }
 
     const projects = await prisma.project.findMany({
-      where: filters,
       orderBy: { createdAt: "desc" },
     });
 

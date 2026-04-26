@@ -170,19 +170,8 @@ const createTask = async (req, res) => {
  */
 const getTasks = async (req, res) => {
   try {
-    const { status } = req.query;
-    const filters = {};
-
-    if (req.user.role !== "ADMIN") {
-      filters.createdById = req.user.id;
-    }
-
-    if (status) {
-      filters.status = status;
-    }
-
+  
     const tasks = await prisma.task.findMany({
-      where: filters,
       orderBy: { createdAt: "desc" },
     });
 
@@ -295,9 +284,6 @@ const updateTask = async (req, res) => {
       return res.status(404).json({ message: "Task not found." });
     }
 
-    if (req.user.role !== "ADMIN" && task.createdById !== req.user.id) {
-      return res.status(403).json({ message: "Access denied." });
-    }
 
     const updatedFields = {};
 
