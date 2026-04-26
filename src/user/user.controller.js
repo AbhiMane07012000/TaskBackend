@@ -239,8 +239,7 @@ const updateUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    const updatedUser = await prisma.user.update({
+    await prisma.user.update({
       where: { id: Number.parseInt(id) },
       data: { name, email, role },
     });
@@ -272,7 +271,7 @@ const changeUserPassword = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const updatedUser = await prisma.user.update({
+    await prisma.user.update({
       where: { id: Number.parseInt(id) },
       data: { password: hashedPassword },
     });
