@@ -1,7 +1,11 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const prisma = require("../../config/db");
-const { generateAccessToken, generateRefreshToken } = require("../../utils/token");
+const {
+  generateAccessToken,
+  generateRefreshToken,
+} = require("../../utils/token");
+const e = require("express");
 
 /**
  * @swagger
@@ -28,15 +32,14 @@ const { generateAccessToken, generateRefreshToken } = require("../../utils/token
  *         updatedAt:
  *           type: string
  *           format: date-time
- * 
- *     
-*/
-
+ *
+ *
+ */
 const generateTokens = (user) => {
   const accessToken = jwt.sign(
     { id: user.id, email: user.email, name: user.name, role: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: "3h" },
+    { expiresIn: "3d" },
   );
 
   const refreshToken = jwt.sign(
@@ -254,7 +257,9 @@ const refresh = async (req, res) => {
   try {
     payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
   } catch {
-    return res.status(403).json({ message: "Invalid or expired refresh token" });
+    return res
+      .status(403)
+      .json({ message: "Invalid or expired refresh token" });
   }
 
   const user = await prisma.user.findUnique({
@@ -262,7 +267,9 @@ const refresh = async (req, res) => {
   });
 
   if (!user || user.tokenVersion !== payload.tokenVersion) {
-    return res.status(403).json({ message: "Invalid or expired refresh token" });
+    return res
+      .status(403)
+      .json({ message: "Invalid or expired refresh token" });
   }
 
   await prisma.user.update({
@@ -320,7 +327,7 @@ const logout = async (req, res) => {
   await prisma.user.update({
     where: { id: userId },
     data: {
-      tokenVersion: { increment: 1 }, 
+      tokenVersion: { increment: 1 },
     },
   });
 
@@ -329,4 +336,83 @@ const logout = async (req, res) => {
   res.json({ message: "Logged out" });
 };
 
-module.exports = { register, login, me, refresh, logout };
+/**
+ * @swagger
+ * /api/auth/change-password:
+ *   put:
+ *     summary: Change user password
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [oldPassword, newPassword]
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *                 example: oldpassword123
+ *               newPassword:
+ *                 type: string
+ *                 example: newpassword456
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *       400:
+ *         description: Old and new password are required or new password is same as old password
+ *       401:
+ *         description: Old password is incorrect
+ *       403:
+ *         description: You are not authorized to change this user's password
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to change password
+ */
+const changePassword = async (req, res) => {
+  const userId = req.user.id;
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    return res
+      .status(400)
+      .json({ message: "Old and new password are required" });
+  }
+
+  if (oldPassword === newPassword) {
+    return res
+      .status(400)
+      .json({ message: "New password cannot be the same as old password" });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "Old password is incorrect" });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashed },
+    });
+
+    return res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Failed to change password", error: error.message });
+  }
+};
+
+module.exports = { register, login, me, refresh, logout, changePassword };
