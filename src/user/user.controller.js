@@ -245,7 +245,7 @@ const updateUser = async (req, res) => {
       data: { name, email, role },
     });
 
-    return res.status(200).json(updatedUser);
+    return res.status(200).json({ message: "User updated successfully" });
   } catch (error) {
     return res
       .status(500)
@@ -277,7 +277,7 @@ const changeUserPassword = async (req, res) => {
       data: { password: hashedPassword },
     });
 
-    return res.status(200).json(updatedUser);
+    return res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
     return res
       .status(500)

@@ -6,7 +6,7 @@ const {getUsers, updateUser, changeUserPassword} = require('./user.controller');
 
 router.get('/',protect,superAdminOnly, getUsers);
 router.patch('/:id', protect, superAdminOnly, updateUser);
-router.put('/:id/password', protect, changeUserPassword);
+router.put('/:id/password', protect, superAdminOnly, changeUserPassword);
 
 
 module.exports = router;
