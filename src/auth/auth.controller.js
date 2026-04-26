@@ -320,7 +320,7 @@ const logout = async (req, res) => {
   await prisma.user.update({
     where: { id: userId },
     data: {
-      tokenVersion: { increment: 1 }, // 🔥 invalidate ALL refresh tokens
+      tokenVersion: { increment: 1 }, 
     },
   });
 
@@ -329,70 +329,4 @@ const logout = async (req, res) => {
   res.json({ message: "Logged out" });
 };
 
-/**
- * 
-  * @swagger
-  * /api/auth/change-user-role:
-  *   post:
-  *     summary: Change a user's role (admin only)
-  *     tags: [Auth]
-  *     security:
-  *       - bearerAuth: []
-  *     requestBody:
-  *       required: true
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             required: [userId, newRole]
-  *             properties:
-  *               userId:
-  *                 type: integer
-  *                 example: 1
-  *               newRole:
-  *                 type: enum
-  *                 enum: [ADMIN, USER]
-  *                 example: ADMIN
-  *     responses:
-  *       200:
-  *         description: User role updated successfully
-  *       400:
-  *         description: User ID and new role are required
-  *       403:
-  *         description: Admin access required
-  *       404:
-  *         description: User not found
-  *       500:
-  *         description: Failed to change user role
- */
-const changeUserRole = async (req, res) => {
-  const { userId, newRole } = req.body;
-
-  if (!userId || !newRole) {
-    return res.status(400).json({ message: "User ID and new role are required" });
-  }
-
-  const allowedRoles = ["ADMIN", "USER"];
-  if (!allowedRoles.includes(newRole)) {
-    return res.status(400).json({ message: "Invalid role. Allowed roles are ADMIN and USER" });
-  }
-
-  try {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    await prisma.user.update({
-      where: { id: userId },
-      data: { role: newRole },
-    });
-
-    res.json({ message: "User role updated" });
-  } catch (error) {
-    console.error("Change user role error:", error);
-    res.status(500).json({ message: "Failed to change user role" });
-  }
-};
-
-module.exports = { register, login, me, refresh, logout, changeUserRole };
+module.exports = { register, login, me, refresh, logout };
