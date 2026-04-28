@@ -1,5 +1,5 @@
 const express = require("express");
-const { protect, adminOnly } = require("../auth/auth.middleware");
+const { protect, adminOnly, superAdminOnly } = require("../auth/auth.middleware");
 const {
     createTask,
     getTasks,
@@ -9,17 +9,22 @@ const {
     assignUserToTask,
     getTaskAssignees,
     removeUserFromTask,
+    getCommentsByTask
 } = require("./task.controller");
 
 const router = express.Router();
 
-router.post("/", protect, createTask);
+router.post("/", protect, adminOnly, createTask);
 router.get("/", protect, getTasks);
+
+router.get("/:id", protect, getTaskById);
+router.patch("/:id", protect, updateTask);
+router.delete("/:id", protect, superAdminOnly, deleteTask);
+
 router.patch("/:id/assign", protect, adminOnly ,assignUserToTask);
 router.delete("/:id/remove", protect, adminOnly, removeUserFromTask);
 router.get("/:id/assignees", protect, getTaskAssignees);
-router.get("/:id", protect, getTaskById);
-router.patch("/:id", protect, updateTask);
-router.delete("/:id", protect, adminOnly, deleteTask);
+
+router.get("/:id/comments", protect, getCommentsByTask);
 
 module.exports = router;

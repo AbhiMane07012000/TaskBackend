@@ -23,6 +23,13 @@ enum TaskStatus {
   COMPLETED
 }
 
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 model User {
   id        Int   @id @default(autoincrement())
   name      String?
@@ -33,12 +40,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  
 
   tasks     Task[]
   projects   Project[]
   projectUsers Project_User[]
   TaskUsers Task_User[]
+  Comments Comment[]
 }
 
 model Task{
@@ -46,6 +53,9 @@ model Task{
   title       String
   description String
   status      TaskStatus   @default(PENDING)
+  taskPriority TaskPriority @default(LOW)
+  startDate   DateTime?     
+  dueDate     DateTime?     
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
@@ -56,6 +66,7 @@ model Task{
   project     Project      @relation(fields: [projectId], references: [id])
 
   TaskUsers Task_User[]
+  Comments Comment[]
 }
 
 model Project {
@@ -69,6 +80,18 @@ model Project {
 
   tasks    Task[]
   users    Project_User[]
+}
+
+model Comment{
+  id String @id @default(uuid())
+  content String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById Int
+  createdBy User @relation(fields: [createdById], references: [id])
+  taskId String
+  task Task @relation(fields: [taskId], references: [id])
 }
 
 model Project_User {
