@@ -1,5 +1,5 @@
 const express = require("express");
-const { protect, adminOnly, superAdminOnly } = require("../auth/auth.middleware");
+const { protect, adminOnly, superAdminOnly, AdminOrSuperAdmin } = require("../auth/auth.middleware");
 const {
     createTask,
     getTasks,
@@ -21,7 +21,7 @@ router.get("/:id", protect, getTaskById);
 router.patch("/:id", protect, updateTask);
 router.delete("/:id", protect, superAdminOnly, deleteTask);
 
-router.patch("/:id/assign", protect, adminOnly ,assignUserToTask);
+router.patch("/:id/assign", protect, AdminOrSuperAdmin ,assignUserToTask);
 router.delete("/:id/remove", protect, adminOnly, removeUserFromTask);
 router.get("/:id/assignees", protect, getTaskAssignees);
 

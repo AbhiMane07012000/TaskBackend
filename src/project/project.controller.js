@@ -1,5 +1,7 @@
 const prisma = require("../../config/db");
 
+const { createNotification } = require("../notification/notification.service");
+
 /**
  * @swagger
  * tags:
@@ -397,6 +399,12 @@ const addUserToProject = async (req, res) => {
         user: { connect: { id: userId } },
       },
     });
+
+    await createNotification(
+      userId,
+      "PROJECT_UPDATED",
+      `You have been added to project: ${project.name}`
+    )
 
     return res
       .status(200)

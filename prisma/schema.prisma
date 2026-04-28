@@ -30,6 +30,13 @@ enum TaskPriority {
   URGENT
 }
 
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_UPDATED
+  TASK_COMMENT_MENTION
+  PROJECT_UPDATED
+}
+
 model User {
   id        Int   @id @default(autoincrement())
   name      String?
@@ -46,6 +53,7 @@ model User {
   projectUsers Project_User[]
   TaskUsers Task_User[]
   Comments Comment[]
+  notifications Notification[]
 }
 
 model Task{
@@ -92,6 +100,18 @@ model Comment{
   createdBy User @relation(fields: [createdById], references: [id])
   taskId String
   task Task @relation(fields: [taskId], references: [id])
+}
+
+model Notification {
+  id String @id @default(uuid())
+  type NotificationType
+  message String
+  isRead Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId Int
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Project_User {
