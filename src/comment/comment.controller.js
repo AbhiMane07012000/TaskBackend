@@ -58,6 +58,15 @@ const createComment = async (req, res) => {
   }
 
   try {
+
+    const comment = await prisma.comment.create({
+      data: {
+        content,
+        taskId,
+        createdById: userId,
+      },
+    });
+
     const mentionedUsers = extractMentions(content);
 
     await Promise.all(
@@ -76,15 +85,12 @@ const createComment = async (req, res) => {
       }),
     );
 
-    const comment = await prisma.comment.create({
-      data: {
-        content,
-        taskId,
-        createdById: userId,
-      },
-    });
+    
 
-    res.status(201).json(comment);
+    res.status(201).json({
+      success: true,
+      message: "Comment created successfully",
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to create comment" });
