@@ -1,18 +1,19 @@
 const express = require('express');
 const router = express.Router();
 
-const { protect, adminOnly } = require('../auth/auth.middleware');
+const { protect, adminOnly, superAdminOnly } = require('../auth/auth.middleware');
+// const { createProjectRateLimiter } = require('../../middlewares/projectRateLimit.middleware');
 const {createProject,getProjects,getProjectById,updateProject,deleteProject, getProjectsUser,addUserToProject, removeUserFromProject } = require('./project.controller');
 
-router.post('/', protect, createProject);
+router.post('/', protect, superAdminOnly, createProject);
 
 router.get('/', protect, getProjects);
 
 router.get('/:id', protect, getProjectById);
 
-router.patch('/:id', protect, updateProject);
+router.patch('/:id', protect, adminOnly, updateProject);
 
-router.delete('/:id', protect, adminOnly , deleteProject);
+router.delete('/:id', protect, superAdminOnly , deleteProject);
 
 router.get('/:id/users', protect, getProjectsUser);
 

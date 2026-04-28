@@ -610,6 +610,34 @@ const getTaskAssignees = async (req, res) => {
   }
 };
 
+
+const getCommentsByTask = async (req, res) => {
+  const { id:taskId } = req.params;
+  console.log("Fetching comments for taskId:", taskId);
+
+  try {
+    const comments = await prisma.comment.findMany({
+      where: { taskId },
+      // include: { task: true, createdBy: true}, // include related task and user info if needed
+    });
+
+    if (!comments) {
+      return res.status(404).json({
+        success: false,
+        error: "No comments found for this task",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: comments,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch comments" });
+  }
+};
+
 module.exports = {
   createTask,
   getTasks,
@@ -619,4 +647,5 @@ module.exports = {
   assignUserToTask,
   getTaskAssignees,
   removeUserFromTask,
+  getCommentsByTask,
 };
