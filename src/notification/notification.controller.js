@@ -92,17 +92,18 @@ const getNotifications = async (req, res) => {
  */
 const markAsRead = async (req, res) => {
   const { id } = req.params;
+  const userId = req.user.id;
 
-  if (!id) {
+  if (!id || !userId) {
     return res.status(400).json({
       status: "error",
-      message: "Notification ID is required to mark as read",
+      message: "Notification ID and User ID are required to mark as read",
     });
   }
 
   try {
     const markAsRead = await prisma.notification.findUnique({
-      where: { id: id },
+      where: { id: id , userId: userId },
     });
 
   
@@ -117,12 +118,12 @@ const markAsRead = async (req, res) => {
     if (markAsRead.isRead) {
       return res.status(400).json({
         status: "error",
-        message: "Notification is already marked as read",
+        message: "Notification is already read",
       });
     }
 
     await prisma.notification.update({
-      where: { id: id },
+      where: { id: id , userId: userId },
       data: { isRead: true },
     });
 
