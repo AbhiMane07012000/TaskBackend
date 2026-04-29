@@ -58,6 +58,27 @@ const createComment = async (req, res) => {
   }
 
   try {
+    const mentionedUsers = extractMentions(content);
+
+    for (const name of mentionedUsers) {
+      const user = await prisma.user.findUnique({
+        where: { name },
+        select: { id: true },
+      });
+
+      if (user) {
+        const taskUser = await prisma.task_User.findFirst({
+          where: { taskId, userId: user.id },
+        });
+
+        if (!taskUser) {
+          return res.status(400).json({
+            error: `User @${name} is not assigned to this task`,
+          });
+        }
+      }
+    }
+
     const comment = await prisma.comment.create({
       data: {
         content,
@@ -66,53 +87,31 @@ const createComment = async (req, res) => {
       },
     });
 
-    const mentionedUsers = extractMentions(content);
-    console.log("Mentioned Users:", mentionedUsers);
-
     await Promise.all(
       mentionedUsers.map(async (name) => {
         const user = await prisma.user.findUnique({
           where: { name },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
+          select: { id: true },
         });
 
         if (user) {
-          const taskUser = await prisma.task_User.findFirst({
-            where: {
-              taskId: taskId,
-              userId: user.id,
-            },
-          });
-
-          if (!taskUser) {
-            return res.status(400).json({
-              error: `User @${name} is not assigned to this task and cannot be mentioned in the comment`,
-            });
-          }
-
-          if (taskUser) {
-            await createNotification(
-              user.id,
-              "TASK_COMMENT_MENTION",
-              `You were mentioned in a comment: "${content}"`,
-            );
-          }
+          await createNotification(
+            user.id,
+            "TASK_COMMENT_MENTION",
+            `You were mentioned in a comment: "${content}"`,
+          );
         }
       }),
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Comment created successfully",
+      comment,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to create comment" });
+    return res.status(500).json({ error: "Failed to create comment" });
   }
 };
 
