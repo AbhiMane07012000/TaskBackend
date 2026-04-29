@@ -11,7 +11,7 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
+enum Role{
   SUPER_ADMIN
   ADMIN
   USER
@@ -37,146 +37,99 @@ enum NotificationType {
   PROJECT_UPDATED
 }
 
-enum PlanType {
-  FREE
-  PRO
-  PREMIUM
-}
-
-enum SubscriptionStatus {
-  ACTIVE
-  CANCELLED
-  EXPIRED
-}
-
-enum BillingType {
-  MONTHLY
-  YEARLY
-}
-
 model User {
-  id           String   @id @default(uuid())
-  username     String   @unique
-  email        String   @unique
-  password     String
-  tokenVersion Int      @default(0)
-  role         Role     @default(USER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id        Int   @id @default(autoincrement())
+  name      String? @unique
+  email     String   @unique
+  password  String
+  tokenVersion   Int      @default(0)
+  role Role @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tasks         Task[]
-  projects      Project[]
-  projectUsers  ProjectUser[]
-  TaskUsers     TaskUser[]
-  Comments      Comment[]
+
+  tasks     Task[]
+  projects   Project[]
+  projectUsers Project_User[]
+  TaskUsers Task_User[]
+  Comments Comment[]
   notifications Notification[]
-  subscription  Subscription?
 }
 
-model Task {
-  id           String       @id @default(uuid())
-  title        String
-  description  String
-  status       TaskStatus   @default(PENDING)
+model Task{
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  status      TaskStatus   @default(PENDING)
   taskPriority TaskPriority @default(LOW)
-  startDate    DateTime?
-  dueDate      DateTime?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  startDate   DateTime?     
+  dueDate     DateTime?     
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
-  createdById String
-  createdBy   User    @relation(fields: [createdById], references: [id])
+
+  createdById Int
+  createdBy   User         @relation(fields: [createdById], references: [id])
   projectId   String
-  project     Project @relation(fields: [projectId], references: [id])
+  project     Project      @relation(fields: [projectId], references: [id])
 
-  TaskUsers TaskUser[]
-  Comments  Comment[]
+  TaskUsers Task_User[]
+  Comments Comment[]
 }
 
 model Project {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String       @id @default(uuid())
+  name        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
-  createdById String
-  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdById Int
+  createdBy   User         @relation(fields: [createdById], references: [id])
 
-  tasks Task[]
-  users ProjectUser[]
+  tasks    Task[]
+  users    Project_User[]
 }
 
-model Comment {
-  id        String   @id @default(uuid())
-  content   String
+model Comment{
+  id String @id @default(uuid())
+  content String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  createdById String
-  createdBy   User   @relation(fields: [createdById], references: [id])
-  taskId      String
-  task        Task   @relation(fields: [taskId], references: [id])
+  createdById Int
+  createdBy User @relation(fields: [createdById], references: [id])
+  taskId String
+  task Task @relation(fields: [taskId], references: [id])
 }
 
 model Notification {
-  id        String           @id @default(uuid())
-  type      NotificationType
-  message   String
-  isRead    Boolean          @default(false)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id String @id @default(uuid())
+  type NotificationType
+  message String
+  isRead Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  userId Int
+  user User @relation(fields: [userId], references: [id])
 }
 
-model ProjectUser {
+model Project_User {
   projectId String
-  userId    String
+  userId    Int
 
-  project Project @relation(fields: [projectId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
 
   @@id([projectId, userId])
 }
 
-model TaskUser {
+model Task_User{
   taskId String
-  userId String
-  task   Task   @relation(fields: [taskId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
+  userId Int
+
+  task    Task    @relation(fields: [taskId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
 
   @@id([taskId, userId])
-}
-
-model Plan {
-  id           String      @id @default(uuid())
-  name         PlanType    @unique
-  price        Float
-  billingCycle BillingType @default(MONTHLY)
-  maxProjects  Int         @default(3)
-  maxMembers   Int         @default(5)
-  maxTasks     Int         @default(50)
-  isActive     Boolean     @default(true)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-
-  subscriptions Subscription[]
-}
-
-model Subscription {
-  id                String             @id @default(uuid())
-  userID            String             @unique
-  planId            String
-  status            SubscriptionStatus @default(ACTIVE)
-  startDate         DateTime           @default(now())
-  endDate           DateTime?
-  razorpayOrderId   String?
-  razorpayPaymentId String?
-  razorpaySignature String? // for webhook verification
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-
-  user User @relation(fields: [userID], references: [id], onDelete: Cascade)
-  plan Plan @relation(fields: [planId], references: [id])
 }

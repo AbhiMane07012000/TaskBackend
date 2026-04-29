@@ -37,7 +37,7 @@ const e = require("express");
  */
 const generateTokens = (user) => {
   const accessToken = jwt.sign(
-    { id: user.id, email: user.email, username: user.username, role: user.role },
+    { id: user.id, email: user.email, name: user.name, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: "3d" },
   );
@@ -90,7 +90,7 @@ const generateTokens = (user) => {
  *         description: Registration failed
  */
 const register = async (req, res) => {
-  const { email, password, username, role } = req.body;
+  const { email, password, name, role } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required" });
@@ -109,7 +109,7 @@ const register = async (req, res) => {
   try {
     const hashed = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { email, password: hashed, username, role: assignedRole },
+      data: { email, password: hashed, name, role: assignedRole },
     });
     res.status(201).json({ message: "User created", userId: user.id });
   } catch (error) {
@@ -208,7 +208,7 @@ const me = async (req, res) => {
         id: user.id,
         email: user.email,
         createdAt: user.createdAt,
-        username: user.username,
+        name: user.name,
         role: user.role,
         updatedAt: user.updatedAt,
       },

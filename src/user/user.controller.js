@@ -53,7 +53,7 @@ const getUsers = async (req, res) => {
     const users = await prisma.user.findMany({
       select: {
         id: true,
-        username: true,
+        name: true,
         email: true,
         role: true,
       },
@@ -139,7 +139,7 @@ const changeUserRole = async (req, res) => {
 
   try {
     const user = await prisma.user.findUnique({
-      where: { id:id },
+      where: { id: Number.parseInt(id) },
     });
 
     if (!user) {
@@ -147,7 +147,7 @@ const changeUserRole = async (req, res) => {
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: id },
+      where: { id: Number.parseInt(id) },
       data: { role },
     });
 
@@ -233,15 +233,15 @@ const updateUser = async (req, res) => {
 
   try {
     const user = await prisma.user.findUnique({
-      where: { id: id },
+      where: { id: Number.parseInt(id) },
     });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
     await prisma.user.update({
-      where: { id: id },
-      data: { username:name, email, role },
+      where: { id: Number.parseInt(id) },
+      data: { name, email, role },
     });
 
     return res.status(200).json({ message: "User updated successfully" });
@@ -264,7 +264,7 @@ const changeUserPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     const user = await prisma.user.findUnique({
-      where: { id: id },
+      where: { id: Number.parseInt(id) },
     });
 
     if (!user) {
@@ -272,7 +272,7 @@ const changeUserPassword = async (req, res) => {
     }
 
     await prisma.user.update({
-      where: { id: id },
+      where: { id: Number.parseInt(id) },
       data: { password: hashedPassword },
     });
 

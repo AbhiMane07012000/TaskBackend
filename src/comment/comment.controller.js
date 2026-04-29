@@ -60,9 +60,9 @@ const createComment = async (req, res) => {
   try {
     const mentionedUsers = extractMentions(content);
 
-    for (const username of mentionedUsers) {
+    for (const name of mentionedUsers) {
       const user = await prisma.user.findUnique({
-        where: { username },
+        where: { name },
         select: { id: true },
       });
 
@@ -73,7 +73,7 @@ const createComment = async (req, res) => {
 
         if (!taskUser) {
           return res.status(400).json({
-            error: `User @${username} is not assigned to this task`,
+            error: `User @${name} is not assigned to this task`,
           });
         }
       }
@@ -88,9 +88,9 @@ const createComment = async (req, res) => {
     });
 
     await Promise.all(
-      mentionedUsers.map(async (username) => {
+      mentionedUsers.map(async (name) => {
         const user = await prisma.user.findUnique({
-          where: { username },
+          where: { name },
           select: { id: true },
         });
 
