@@ -1,4 +1,5 @@
 const prisma = require("../../config/db");
+const { createNotification } = require("../notification/notification.service");
 
 /**
  * @swagger
@@ -278,9 +279,9 @@ const updateTask = async (req, res) => {
     const { id } = req.params;
     const { title, description, status } = req.body;
 
-    const task = await prisma.task.findUnique({ where: { id } });
+    const oldtask = await prisma.task.findUnique({ where: { id } });
 
-    if (!task) {
+    if (!oldtask) {
       return res.status(404).json({ message: "Task not found." });
     }
 
@@ -299,6 +300,22 @@ const updateTask = async (req, res) => {
       where: { id },
       data: updatedFields,
     });
+
+    if(status && oldtask.status !== status){
+      const taskUsers = await prisma.task_User.findMany({
+        where: { taskId: id },
+      });
+
+      await Promise.all(
+        taskUsers.map((taskUser) =>
+          createNotification(
+            taskUser.userId,
+            "TASK_UPDATED",
+            `Task "${updatedTask.title}" status has been updated.`
+          )
+        )
+      );
+    }
 
     return res.status(200).json(updatedTask);
   } catch (error) {
@@ -434,6 +451,12 @@ const assignUserToTask = async (req, res) => {
         user: { connect: { id: userId } },
       },
     });
+
+    await createNotification(
+      userId,
+      "TASK_ASSIGNED",
+      `You have been assigned to task: ${task.title}`
+    );
 
     return res
       .status(200)

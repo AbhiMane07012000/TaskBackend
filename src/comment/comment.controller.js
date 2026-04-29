@@ -1,39 +1,51 @@
 const prisma = require("../../config/db");
-
+const { createNotification } = require("../notification/notification.service");
 
 /**
-    * @swagger
-    * /comments:
-    *   post:
-    *     summary: Create a new comment
-    *     requestBody:
-    *       required: true
-    *       content:
-    *         application/json:
-    *           schema:
-    *             type: object
-    *             properties:
-    *               content:
-    *                 type: string
-    *               taskId:
-    *                 type: number
-    *     responses:
-    *       201:
-    *         description: Comment created successfully
-    *       400:
-    *         description: Bad request
-    *       401:
-    *         description: Unauthorized
-    *       403: 
-    *         description: Unauthorized
-    *       500:
-    *         description: Internal server error
+ * @swagger
+ * tags:
+ *   name: Comments
+ *   description: API for managing user comments on tasks
+ */
+
+const extractMentions = (text) => {
+  const regex = /@(\w+)/g;
+  const matches = [...text.matchAll(regex)];
+  return matches.map((m) => m[1]); // ["abhijeet", "john"]
+};
+
+/**
+ * @swagger
+ * /api/comments:
+ *   post:
+ *     tags: [Comments]
+ *     summary: Create a new comment
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               content:
+ *                 type: string
+ *               taskId:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Comment created successfully
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
  */
 const createComment = async (req, res) => {
   const { content, taskId } = req.body;
   const userId = req.user.id;
-
-  console.log("Creating comment with content:", content, "for taskId:", taskId, "by userId:", userId);
 
   if (!content || !taskId) {
     return res.status(400).json({ error: "Content and taskId are required" });
@@ -46,6 +58,27 @@ const createComment = async (req, res) => {
   }
 
   try {
+    const mentionedUsers = extractMentions(content);
+
+    for (const name of mentionedUsers) {
+      const user = await prisma.user.findUnique({
+        where: { name },
+        select: { id: true },
+      });
+
+      if (user) {
+        const taskUser = await prisma.task_User.findFirst({
+          where: { taskId, userId: user.id },
+        });
+
+        if (!taskUser) {
+          return res.status(400).json({
+            error: `User @${name} is not assigned to this task`,
+          });
+        }
+      }
+    }
+
     const comment = await prisma.comment.create({
       data: {
         content,
@@ -54,46 +87,68 @@ const createComment = async (req, res) => {
       },
     });
 
-    res.status(201).json(comment);
+    await Promise.all(
+      mentionedUsers.map(async (name) => {
+        const user = await prisma.user.findUnique({
+          where: { name },
+          select: { id: true },
+        });
+
+        if (user) {
+          await createNotification(
+            user.id,
+            "TASK_COMMENT_MENTION",
+            `You were mentioned in a comment: "${content}"`,
+          );
+        }
+      }),
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "Comment created successfully",
+      comment,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to create comment" });
+    return res.status(500).json({ error: "Failed to create comment" });
   }
 };
 
 /**
-    * @swagger
-    * /comments/{id}:
-    *   patch:
-    *     summary: Update a comment
-    *     parameters:
-    *       - in: path
-    *         name: id
-    *         required: true
-    *         schema:
-    *           type: number
-    *     requestBody:
-    *       required: true
-    *       content:
-    *         application/json:
-    *           schema:
-    *             type: object
-    *             properties:
-    *               content:
-    *                 type: string
-    *     responses:
-    *       200:
-    *         description: Comment updated successfully
-    *       400:
-    *         description: Bad request
-    *       401:
-    *         description: Unauthorized
-    *       403: 
-    *         description: Unauthorized
-    *       404:
-    *         description: Comment not found
-    *       500:
-    *         description: Internal server error
+ * @swagger
+ * /api/comments/{id}:
+ *   patch:
+ *     tags: [Comments]
+ *     summary: Update a comment
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: number
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               content:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Comment updated successfully
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Unauthorized
+ *       404:
+ *         description: Comment not found
+ *       500:
+ *         description: Internal server error
  */
 const updateComment = async (req, res) => {
   const { id } = req.params;
@@ -136,29 +191,30 @@ const updateComment = async (req, res) => {
 };
 
 /**
-    * @swagger
-    * /comments/{id}:
-    *   delete:
-    *     summary: Delete a comment
-    *     parameters:
-    *       - in: path
-    *         name: id
-    *         required: true
-    *         schema:
-    *           type: number
-    *     responses:
-    *       204:
-    *         description: Comment deleted successfully
-    *       400:
-    *         description: Bad request
-    *       401:
-    *         description: Unauthorized
-    *       403:
-    *         description: Unauthorized
-    *       404:
-    *         description: Comment not found
-    *       500:
-    *         description: Internal server error
+ * @swagger
+ * /api/comments/{id}:
+ *   delete:
+ *     tags: [Comments]
+ *     summary: Delete a comment
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: number
+ *     responses:
+ *       204:
+ *         description: Comment deleted successfully
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Unauthorized
+ *       404:
+ *         description: Comment not found
+ *       500:
+ *         description: Internal server error
  */
 const deleteComment = async (req, res) => {
   const { id } = req.params;
@@ -177,7 +233,9 @@ const deleteComment = async (req, res) => {
     await prisma.comment.delete({
       where: { id: id },
     });
-    res.status(204).json({ success: true, message: "Comment deleted successfully" });
+    res
+      .status(204)
+      .json({ success: true, message: "Comment deleted successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to delete comment" });
