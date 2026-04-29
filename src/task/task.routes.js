@@ -14,7 +14,7 @@ const {
 
 const router = express.Router();
 
-router.post("/", protect, adminOnly, createTask);
+router.post("/", protect, AdminOrSuperAdmin, createTask);
 router.get("/", protect, getTasks);
 
 router.get("/:id", protect, getTaskById);
