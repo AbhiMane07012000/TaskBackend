@@ -72,7 +72,7 @@ const createComment = async (req, res) => {
     await Promise.all(
       mentionedUsers.map(async (name) => {
         const user = await prisma.user.findUnique({
-          where: { name: name },
+          where: { name },
         });
 
         if (user) {
