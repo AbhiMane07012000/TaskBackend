@@ -445,7 +445,7 @@ const assignUserToTask = async (req, res) => {
         .json({ message: "User is already assigned to this task." });
     }
 
-    await prisma.task_User.create({
+    await prisma.taskUser.create({
       data: {
         task: { connect: { id: taskId } },
         user: { connect: { id: userId } },
@@ -541,7 +541,7 @@ const removeUserFromTask = async (req, res) => {
         .json({ message: "User is not assigned to this task." });
     }
 
-    await prisma.task_User.delete({
+    await prisma.taskUser.delete({
       where: { taskId_userId: { taskId, userId } },
     });
 
