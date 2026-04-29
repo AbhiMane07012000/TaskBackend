@@ -435,7 +435,7 @@ const assignUserToTask = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    const existingTaskUser = await prisma.task_User.findUnique({
+    const existingTaskUser = await prisma.taskUser.findUnique({
       where: { taskId_userId: { taskId, userId } },
     });
 
@@ -531,7 +531,7 @@ const removeUserFromTask = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    const existingUser = await prisma.task_User.findUnique({
+    const existingUser = await prisma.taskUser.findUnique({
       where: { taskId_userId: { taskId, userId } },
     });
 
@@ -608,7 +608,7 @@ const getTaskAssignees = async (req, res) => {
       return res.status(404).json({ message: "Task not found." });
     }
 
-    const taskUsers = await prisma.task_User.findMany({
+    const taskUsers = await prisma.taskUser.findMany({
       where: { taskId },
       include: {
         user: {

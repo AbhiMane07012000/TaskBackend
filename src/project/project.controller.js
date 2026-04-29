@@ -393,7 +393,7 @@ const addUserToProject = async (req, res) => {
         .json({ message: "User is already working in this project." });
     }
 
-    await prisma.project_User.create({
+    await prisma.projectUser.create({
       data: {
         project: { connect: { id: projectId } },
         user: { connect: { id: userId } },
@@ -477,7 +477,7 @@ const getProjectsUser = async (req, res) => {
     }
 
     // Get all users working in the project
-    const projectUsers = await prisma.project_User.findMany({
+    const projectUsers = await prisma.projectUser.findMany({
       where: { projectId },
       include: {
         user: {
@@ -561,7 +561,7 @@ const removeUserFromProject = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    const ProjectUser = await prisma.project_User.findUnique({
+    const ProjectUser = await prisma.projectUser.findUnique({
       where: { projectId_userId: { projectId, userId } },
     });
 
