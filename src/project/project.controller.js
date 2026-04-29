@@ -571,7 +571,7 @@ const removeUserFromProject = async (req, res) => {
         .json({ message: "User is not part of the project." });
     }
 
-    await prisma.project_User.delete({
+    await prisma.projectUser.delete({
       where: { projectId_userId: { projectId, userId } },
     });
 
