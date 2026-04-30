@@ -52,6 +52,7 @@ If you are working locally and want Prisma to manage development migrations, you
 
 ```bash
 npx prisma migrate dev
+npx prisma db seed
 ```
 
 ## 5. Start the project
@@ -83,13 +84,14 @@ src/
   post/
       post.controller.js
       post.middleware.js
-      postroutes.js
+      post.routes.js
   index.js
 config/
   db.js
   swagger.js
 prisma/
   schema.prisma
+  seed.js
   migrations/
 ```
 

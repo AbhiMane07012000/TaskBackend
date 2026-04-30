@@ -14,7 +14,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: ["http://localhost:3000"], // add frontend URL
+  origin: ["http://localhost:3000"],                          // add frontend URL
   credentials: true,                                          // allow cookies
 }));
 
@@ -29,6 +29,7 @@ const userRoutes = require("./user/user.route");
 const dashboardRoutes = require("./dashboard/dashboard.route");
 const commentRoutes = require("./comment/comment.route");
 const notificationRoutes = require("./notification/notification.route");
+const planRoutes = require("./plan/plan.route")
 
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
@@ -37,6 +38,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/plans", planRoutes);
 
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
