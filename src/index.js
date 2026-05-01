@@ -29,7 +29,8 @@ const userRoutes = require("./user/user.route");
 const dashboardRoutes = require("./dashboard/dashboard.route");
 const commentRoutes = require("./comment/comment.route");
 const notificationRoutes = require("./notification/notification.route");
-const planRoutes = require("./plan/plan.route")
+const planRoutes = require("./plan/plan.route");
+const subscriptionRoutes = require("./subscription/subscription.route");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
@@ -39,6 +40,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/plans", planRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
 
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

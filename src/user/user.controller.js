@@ -56,6 +56,7 @@ const getUsers = async (req, res) => {
         username: true,
         email: true,
         role: true,
+        subscription:true
       },
     });
 
