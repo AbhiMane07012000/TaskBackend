@@ -28,7 +28,7 @@ const createOrder = async (req, res) => {
     }
 
     const order = await razorpay.orders.create({
-      amount: plan.price * 100,
+      amount: Math.floor(plan.price * 100),
       currency: "INR",
       receipt: `receipt_${req.user.username}_${Date.now()}`,
       notes: {
@@ -51,7 +51,6 @@ const createOrder = async (req, res) => {
     res.status(500).json({
       status: "Error",
       message: "Internal Server Error",
-      errorMessage: error.message,
       error:error
     });
   }
