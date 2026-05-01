@@ -40,11 +40,20 @@ export const storageService = {
 
   // Auth-specific methods
   setToken: (token: string): void => {
-    storageService.set('auth_token', token);
+    try {
+      localStorage.setItem('auth_token', token);
+    } catch (error) {
+      console.error('Error setting auth token in localStorage:', error);
+    }
   },
 
   getToken: (): string | null => {
-    return storageService.get('auth_token');
+    try {
+      return localStorage.getItem('auth_token');
+    } catch (error) {
+      console.error('Error getting auth token from localStorage:', error);
+      return null;
+    }
   },
 
   removeToken: (): void => {

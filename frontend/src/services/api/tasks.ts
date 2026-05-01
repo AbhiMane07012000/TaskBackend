@@ -29,7 +29,7 @@ export const tasksService = {
 
   // Update a task
   update: async (id: number, data: UpdateTaskRequest): Promise<Task> => {
-    const response = await client.put<Task>(`/tasks/${id}`, data);
+    const response = await client.patch<Task>(`/tasks/${id}`, data);
     return response.data;
   },
 

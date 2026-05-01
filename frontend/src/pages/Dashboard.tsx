@@ -26,12 +26,18 @@ export const Dashboard: React.FC = () => {
           usersService.getAll(1, 100),
         ]);
 
-        const completedTasks = tasksData.data.filter(t => t.status === 'completed').length;
+        const projects = Array.isArray(projectsData) ? projectsData : [];
+        const tasks = Array.isArray(tasksData) ? tasksData : [];
+        const users = Array.isArray(usersData) ? usersData : [];
+
+        const completedTasks = tasks.filter(
+          (task) => String(task.status).toUpperCase() === 'COMPLETED'
+        ).length;
 
         setStats({
-          totalProjects: projectsData.total,
-          totalTasks: tasksData.total,
-          totalUsers: usersData.total,
+          totalProjects: projects.length,
+          totalTasks: tasks.length,
+          totalUsers: users.length,
           completedTasks,
         });
       } catch (error) {
