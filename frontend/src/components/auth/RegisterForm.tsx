@@ -25,6 +25,7 @@ export const RegisterForm: React.FC = () => {
     setApiError(null);
     try {
       await registerUser({
+        username: data.email.split('@')[0],
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,

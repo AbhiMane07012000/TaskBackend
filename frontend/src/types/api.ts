@@ -5,20 +5,21 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
+  username: string;
   firstName: string;
   lastName: string;
   email: string;
   password: string;
 }
 
-export interface AuthResponse {
-  token: string;
-  user: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
+export interface LoginResponse {
+  accessToken: string;
+}
+
+export interface RegisterResponse {
+  message: string;
+  data: {
+    UserId: number;
   };
 }
 

@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types/models';
-import { AuthResponse, LoginRequest, RegisterRequest } from '../types/api';
+import { LoginRequest, RegisterRequest } from '../types/api';
 import { authService } from '../services/api/auth';
 import { storageService } from '../services/storage';
 
@@ -46,17 +46,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(true);
     setError(null);
     try {
-      const response: AuthResponse = await authService.login(credentials);
-      storageService.setToken(response.token);
-      
+      const response = await authService.login(credentials);
+      storageService.setToken(response.accessToken);
+
+      const meResponse = await authService.getCurrentUser();
+      const currentUser = meResponse.user;
+      const derivedFirstName = currentUser.firstName || currentUser.username || '';
       const userData: User = {
-        id: response.user.id,
-        firstName: response.user.firstName,
-        lastName: response.user.lastName,
-        email: response.user.email,
-        role: response.user.role as 'admin' | 'user' | 'guest',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        id: currentUser.id,
+        firstName: derivedFirstName,
+        lastName: currentUser.lastName || '',
+        email: currentUser.email,
+        role: String(currentUser.role).toLowerCase() as 'admin' | 'user' | 'guest',
+        createdAt: currentUser.createdAt,
+        updatedAt: currentUser.updatedAt,
       };
       
       storageService.setUser(userData);
@@ -74,21 +77,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(true);
     setError(null);
     try {
-      const response: AuthResponse = await authService.register(data);
-      storageService.setToken(response.token);
-      
-      const userData: User = {
-        id: response.user.id,
-        firstName: response.user.firstName,
-        lastName: response.user.lastName,
-        email: response.user.email,
-        role: response.user.role as 'admin' | 'user' | 'guest',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      
-      storageService.setUser(userData);
-      setUser(userData);
+      await authService.register(data);
+      await login({ email: data.email, password: data.password });
     } catch (err: any) {
       const message = err.response?.data?.message || 'Registration failed';
       setError(message);
