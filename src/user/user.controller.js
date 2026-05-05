@@ -49,8 +49,19 @@ const prisma = require("../../config/db");
  *         description: Internal server error
  */
 const getUsers = async (req, res) => {
+
+  const {search="", page=1, limit=2} = req.query;
+
+  const pageNumber = Number.parseInt(page);
+  const pageSize = Number.parseInt(limit);
+  const skip = (pageNumber - 1) * pageSize;
+
+  const where = search ? { username: { contains: search  } } : {};
+
+
   try {
     const users = await prisma.user.findMany({
+      where,
       select: {
         id: true,
         username: true,
@@ -58,13 +69,28 @@ const getUsers = async (req, res) => {
         role: true,
         subscription:true
       },
+      skip,
+      take: pageSize,
+      orderBy:{ createdAt: "desc" },
     });
+
+    const totalUsers = await prisma.user.count({ where });
 
     if (users.length === 0) {
       return res.status(404).json({ message: "No users found" });
     }
 
-    return res.status(200).json(users);
+    return res.status(200).json(
+      {
+       data: users,
+       meta:{
+          total: totalUsers,
+          page: pageNumber,
+          limit: pageSize,
+          totalPages: Math.ceil(totalUsers / pageSize)
+       } 
+      }
+    );
   } catch (error) {
     return res
       .status(500)

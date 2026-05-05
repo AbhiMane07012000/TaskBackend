@@ -1,5 +1,6 @@
 const prisma = require("../../config/db");
 const { createNotification } = require("../notification/notification.service");
+const cloudinary = require("../../config/cloudinary");
 
 /**
  * @swagger
@@ -31,6 +32,9 @@ const extractMentions = (text) => {
  *                 type: string
  *               taskId:
  *                 type: number
+ *               image:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Comment created successfully
@@ -79,11 +83,16 @@ const createComment = async (req, res) => {
       }
     }
 
+    const imageUrl = req.file?.path ?? null;
+    const imagePublicId = req.file?.filename ?? null;
+
     const comment = await prisma.comment.create({
       data: {
         content,
         taskId,
         createdById: userId,
+        imageUrl,
+        imagePublicId,
       },
     });
 
@@ -110,8 +119,11 @@ const createComment = async (req, res) => {
       comment,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Failed to create comment" });
+    console.error(error.message);
+    if (req.file) {
+      await cloudinary.uploader.destroy(req.file.filename);
+    }
+    return res.status(500).json({ errorMessage: "Failed to create comment", error: error });
   }
 };
 
@@ -229,6 +241,9 @@ const deleteComment = async (req, res) => {
     }
     if (comment.createdById !== userId) {
       return res.status(403).json({ error: "Unauthorized" });
+    }
+    if (comment.imagePublicId) {
+      await cloudinary.uploader.destroy(comment.imagePublicId);
     }
     await prisma.comment.delete({
       where: { id: id },
