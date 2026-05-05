@@ -1,5 +1,5 @@
 const prisma = require("../../config/db");
-const razorpay  = require("../../utils/razorpay");
+const razorpay  = require("../../config/razorpay");
 
 const createOrder = async (req, res) => {
   const { planId } = req.body;
