@@ -1,6 +1,7 @@
 const prisma = require("../../config/db");
 
 const { createNotification } = require("../notification/notification.service");
+const { generateContent } = require("../../config/ai");
 
 /**
  * @swagger
@@ -68,7 +69,7 @@ const { createNotification } = require("../notification/notification.service");
  */
 const createProject = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, description } = req.body;
 
     if (!name) {
       return res.status(400).json({ message: "Name is required." });
@@ -77,6 +78,7 @@ const createProject = async (req, res) => {
     const project = await prisma.project.create({
       data: {
         name,
+        description,
         createdBy: { connect: { id: req.user.id } },
       },
     });
@@ -118,7 +120,6 @@ const createProject = async (req, res) => {
  */
 const getProjects = async (req, res) => {
   try {
-
     const projects = await prisma.project.findMany({
       orderBy: { createdAt: "desc" },
     });
@@ -226,7 +227,7 @@ const getProjectById = async (req, res) => {
 const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name } = req.body;
+    const { name, description } = req.body;
 
     const project = await prisma.project.findUnique({ where: { id } });
 
@@ -241,7 +242,7 @@ const updateProject = async (req, res) => {
     const updatedFields = {};
 
     if (name !== undefined) updatedFields.name = name;
-
+    if (description !== undefined) updatedFields.description = description;
     if (Object.keys(updatedFields).length === 0) {
       return res.status(400).json({ message: "No update fields provided." });
     }
@@ -403,8 +404,8 @@ const addUserToProject = async (req, res) => {
     await createNotification(
       userId,
       "PROJECT_UPDATED",
-      `You have been added to project: ${project.name}`
-    )
+      `You have been added to project: ${project.name}`,
+    );
 
     return res
       .status(200)
@@ -586,6 +587,34 @@ const removeUserFromProject = async (req, res) => {
   }
 };
 
+const getProjectTasksSuggestion = async (req, res) => {
+  try {
+    const { id: projectId } = req.params;
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found." });
+    }
+
+    const TaskSuggestions = await generateContent(`Suggest some tasks for a project with the following description: ${project.description || "No description provided"}`);
+    
+    if(!TaskSuggestions) {
+      return res.status(404).json({ message: "No task suggestions found." });
+    }
+
+    return res.status(200).json({ status: "success", data: TaskSuggestions });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "Unable to fetch project tasks suggestion.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createProject,
   getProjects,
@@ -595,4 +624,5 @@ module.exports = {
   addUserToProject,
   getProjectsUser,
   removeUserFromProject,
+  getProjectTasksSuggestion
 };

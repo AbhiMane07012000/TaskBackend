@@ -9,7 +9,8 @@ const {
     assignUserToTask,
     getTaskAssignees,
     removeUserFromTask,
-    getCommentsByTask
+    getCommentsByTask,
+    getCommentSummary
 } = require("./task.controller");
 
 const router = express.Router();
@@ -26,5 +27,6 @@ router.delete("/:id/remove", protect, adminOnly, removeUserFromTask);
 router.get("/:id/assignees", protect, getTaskAssignees);
 
 router.get("/:id/comments", protect, getCommentsByTask);
+router.get("/:id/summary", protect, getCommentSummary);
 
 module.exports = router;

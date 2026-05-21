@@ -1,6 +1,8 @@
 const prisma = require("../../config/db");
 const { createNotification } = require("../notification/notification.service");
 
+const { generateContent } = require("../../config/ai");
+
 /**
  * @swagger
  * tags:
@@ -661,6 +663,70 @@ const getCommentsByTask = async (req, res) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/tasks/{id}/summary:
+ *   get:
+ *     tags:
+ *       - Tasks
+ *     summary: Get a summary of comments for a task
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Task ID
+ *     responses:
+ *       200:
+ *         description: Summary of comments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Task not found or no comments available
+ */
+const getCommentSummary = async(req,res) => {
+
+  const { id:taskId } = req.params;
+  
+  try {
+    const comments = await prisma.comment.findMany({
+      where: { taskId },
+    });
+
+    if (!comments || comments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "No comments found for this task",
+      });
+    }
+
+    const content = comments.map(c => c.content).join("\n");
+
+    const summary = await generateContent(`Summarize the following comments:\n${content}`);
+
+    res.json({
+      success: true,
+      data: summary,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to summarize comments" });
+  }  
+};
+
 module.exports = {
   createTask,
   getTasks,
@@ -671,4 +737,5 @@ module.exports = {
   getTaskAssignees,
   removeUserFromTask,
   getCommentsByTask,
+  getCommentSummary
 };
