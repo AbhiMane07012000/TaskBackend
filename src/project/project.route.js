@@ -21,6 +21,6 @@ router.post('/:id/users', protect, adminOnly, addUserToProject);
 
 router.delete('/:id/users', protect, adminOnly, removeUserFromProject);
 
-router.get('/:id/tasks/suggestions', protect, getProjectTasksSuggestion);
+router.get('/:id/tasks/suggestions', protect, adminOnly, getProjectTasksSuggestion);
 
 module.exports = router;
