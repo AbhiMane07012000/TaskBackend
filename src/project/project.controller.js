@@ -3,6 +3,8 @@ const prisma = require("../../config/db");
 const { createNotification } = require("../notification/notification.service");
 const { generateContent } = require("../../config/ai");
 
+const { sendEmail } = require("../../utils/mailer");
+
 /**
  * @swagger
  * tags:
@@ -379,14 +381,17 @@ const addUserToProject = async (req, res) => {
     // Check if user exists
     const user = await prisma.user.findUnique({ where: { id: userId } });
 
+   
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
     // Check if user is already in the project
-    const existingProjectUser = await prisma.project_User.findUnique({
+    const existingProjectUser = await prisma.ProjectUser.findUnique({
       where: { projectId_userId: { projectId, userId } },
     });
+
+     console.log("User found:", existingProjectUser); // Debugging line
 
     if (existingProjectUser) {
       return res
@@ -406,6 +411,13 @@ const addUserToProject = async (req, res) => {
       "PROJECT_UPDATED",
       `You have been added to project: ${project.name}`,
     );
+
+    await sendEmail({
+      to: user.email,
+      subject: `You have been assigned to ${project.name}`,
+      text: `<p>Hi ${user.username}, you have been assigned to the project: ${project.name}</p><br/> <br/> Best regards,<br>The TaskFlow Team</p>   `,
+      html: `<p>Hi ${user.username}, you have been assigned to the project: ${project.name}</p><br/> <br/> Best regards,<br>The TaskFlow Team</p>   `,
+    });
 
     return res
       .status(200)
@@ -599,14 +611,15 @@ const getProjectTasksSuggestion = async (req, res) => {
       return res.status(404).json({ message: "Project not found." });
     }
 
-    const TaskSuggestions = await generateContent(`Suggest some tasks for a project with the following description: ${project.description || "No description provided"}`);
-    
-    if(!TaskSuggestions) {
+    const TaskSuggestions = await generateContent(
+      `Suggest some tasks for a project with the following description: ${project.description || "No description provided"}`,
+    );
+
+    if (!TaskSuggestions) {
       return res.status(404).json({ message: "No task suggestions found." });
     }
 
     return res.status(200).json({ status: "success", data: TaskSuggestions });
-
   } catch (error) {
     return res.status(500).json({
       message: "Unable to fetch project tasks suggestion.",
@@ -624,5 +637,5 @@ module.exports = {
   addUserToProject,
   getProjectsUser,
   removeUserFromProject,
-  getProjectTasksSuggestion
+  getProjectTasksSuggestion,
 };

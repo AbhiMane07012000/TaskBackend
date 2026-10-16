@@ -2,6 +2,7 @@ const prisma = require("../../config/db");
 const { createNotification } = require("../notification/notification.service");
 
 const { generateContent } = require("../../config/ai");
+const { sendEmail } = require("../../utils/mailer");
 
 /**
  * @swagger
@@ -173,7 +174,6 @@ const createTask = async (req, res) => {
  */
 const getTasks = async (req, res) => {
   try {
-  
     const tasks = await prisma.task.findMany({
       orderBy: { createdAt: "desc" },
     });
@@ -287,7 +287,6 @@ const updateTask = async (req, res) => {
       return res.status(404).json({ message: "Task not found." });
     }
 
-
     const updatedFields = {};
 
     if (title !== undefined) updatedFields.title = title;
@@ -303,7 +302,7 @@ const updateTask = async (req, res) => {
       data: updatedFields,
     });
 
-    if(status && oldtask.status !== status){
+    if (status && oldtask.status !== status) {
       const taskUsers = await prisma.task_User.findMany({
         where: { taskId: id },
       });
@@ -313,9 +312,9 @@ const updateTask = async (req, res) => {
           createNotification(
             taskUser.userId,
             "TASK_UPDATED",
-            `Task "${updatedTask.title}" status has been updated.`
-          )
-        )
+            `Task "${updatedTask.title}" status has been updated.`,
+          ),
+        ),
       );
     }
 
@@ -457,8 +456,15 @@ const assignUserToTask = async (req, res) => {
     await createNotification(
       userId,
       "TASK_ASSIGNED",
-      `You have been assigned to task: ${task.title}`
+      `You have been assigned to task: ${task.title}`,
     );
+
+    await sendEmail({
+      to: user.email,
+      subject: `You have been assigned to task: ${task.title}`,
+      text: `<p>Hi ${user.username}, you have been assigned to the task: ${task.title}</p><br/> Best regards,<br>The TaskFlow Team</p>   `,
+      html: `<p>Hi ${user.username}, you have been assigned to the task: ${task.title}</p><br/> Best regards,<br>The TaskFlow Team</p>   `,
+    });
 
     return res
       .status(200)
@@ -511,7 +517,6 @@ const assignUserToTask = async (req, res) => {
  *         description: Task or user not found
  */
 const removeUserFromTask = async (req, res) => {
-
   const { id: taskId } = req.params;
   const { userId } = req.body;
 
@@ -547,15 +552,14 @@ const removeUserFromTask = async (req, res) => {
       where: { taskId_userId: { taskId, userId } },
     });
 
-    return res.status(200).json({message:"User removed from task successfully"})
-
-  } catch (error) {
     return res
-      .status(500)
-      .json({
-        message: "Unable to remove user from task.",
-        error: error.message,
-      });
+      .status(200)
+      .json({ message: "User removed from task successfully" });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Unable to remove user from task.",
+      error: error.message,
+    });
   }
 };
 
@@ -635,9 +639,8 @@ const getTaskAssignees = async (req, res) => {
   }
 };
 
-
 const getCommentsByTask = async (req, res) => {
-  const { id:taskId } = req.params;
+  const { id: taskId } = req.params;
   console.log("Fetching comments for taskId:", taskId);
 
   try {
@@ -696,10 +699,9 @@ const getCommentsByTask = async (req, res) => {
  *       404:
  *         description: Task not found or no comments available
  */
-const getCommentSummary = async(req,res) => {
+const getCommentSummary = async (req, res) => {
+  const { id: taskId } = req.params;
 
-  const { id:taskId } = req.params;
-  
   try {
     const comments = await prisma.comment.findMany({
       where: { taskId },
@@ -712,19 +714,20 @@ const getCommentSummary = async(req,res) => {
       });
     }
 
-    const content = comments.map(c => c.content).join("\n");
+    const content = comments.map((c) => c.content).join("\n");
 
-    const summary = await generateContent(`Summarize the following comments:\n${content}`);
+    const summary = await generateContent(
+      `Summarize the following comments:\n${content}`,
+    );
 
     res.json({
       success: true,
       data: summary,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to summarize comments" });
-  }  
+  }
 };
 
 module.exports = {
@@ -737,5 +740,5 @@ module.exports = {
   getTaskAssignees,
   removeUserFromTask,
   getCommentsByTask,
-  getCommentSummary
+  getCommentSummary,
 };
