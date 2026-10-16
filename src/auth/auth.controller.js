@@ -9,7 +9,6 @@ const e = require("express");
 
 const { sendEmail } = require("../../utils/mailer");
 
-
 /**
  * @swagger
  * tags:
@@ -132,6 +131,12 @@ const register = async (req, res) => {
       },
     });
 
+    res.status(201).json({
+      message: "User created",
+      data: {
+        UserId: user.id,
+      },
+    });
 
     await sendEmail({
       to: user.email,
@@ -139,11 +144,7 @@ const register = async (req, res) => {
       text: `Hi ${user.username}, welcome to TaskFlow!`,
       html: `<p>Hi ${user.username}, welcome to TaskFlow!</p><br/>We are excited to have you on board. Start managing your tasks efficiently today! <br/> <br/> Best regards,<br>The TaskFlow Team</p>   `,
     });
-
-    res.status(201).json({ message: "User created", data: {   
-      UserId: user.id
-     } });
-     
+    
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({ message: "Registration failed" });
