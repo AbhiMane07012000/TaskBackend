@@ -1,99 +1,91 @@
-# Project Setup
+# Task Management API
 
-This project is a Node.js + Express authentication API that uses Prisma with PostgreSQL and exposes Swagger docs.
+A Node.js and Express API for authentication, projects, tasks, comments, notifications, dashboards, and subscriptions. It uses PostgreSQL through Prisma and provides interactive API documentation with Swagger UI.
 
-## Prerequisites
+## Requirements
 
-Make sure you have these installed before starting:
-
-- Node.js 20+ recommended
+- Node.js 20 or later
 - npm
 - PostgreSQL
 
-## 1. Install dependencies
+## Setup
+
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-## 2. Create environment variables
-
-Create a `.env` file in the project root:
+Create a `.env` file in the project root. Set the credentials for the integrations you use; the database and JWT secrets are required by the API.
 
 ```env
 PORT=5000
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/setup_db"
-JWT_SECRET="your-access-token-secret"
-JWT_REFRESH_SECRET="your-refresh-token-secret"
+DATABASE_URL="postgresql://username:password@localhost:5432/task_backend"
+
+JWT_SECRET=replace_with_a_secure_secret
+JWT_REFRESH_SECRET=replace_with_a_different_secure_secret
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+GOOGLE_API_KEY=
+SENDGRID_API_KEY=
+MAIL_FROM=
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
 ```
 
-### Environment variable notes
-
-- `PORT`: Port used by the Express server.
-- `DATABASE_URL`: PostgreSQL connection string used by Prisma.
-- `JWT_SECRET`: Secret for access tokens.
-- `JWT_REFRESH_SECRET`: Secret for refresh tokens.
-
-## 3. Run Followin commands
-
-```bash 
-npx prisma migrate dev --name init 
-npx prisma generate
-```
-## 4. Run database migrations
-
-Apply the existing Prisma migrations:
+Apply the existing migrations and generate the Prisma client:
 
 ```bash
 npx prisma migrate deploy
+npx prisma generate
 ```
 
-If you are working locally and want Prisma to manage development migrations, you can also use:
+To populate the database with the project seed data, run:
 
 ```bash
-npx prisma migrate dev
 npx prisma db seed
 ```
 
-## 5. Start the project
+## Run
 
-For development:
+Start the development server with automatic reload:
 
 ```bash
 npm run dev
 ```
 
+Or start it without reload:
 
-## 6. Open the API
-
-After the server starts, you can access:
-
-- API base URL: `http://localhost:5000`
-- Swagger documentation: `http://localhost:5000/api-docs`
-
-## Project structure 
-
-> Note: Follow Modular approch like auth and post(post is added for reference)
-
-```text
-src/
-  auth/
-      auth.controller.js
-      auth.middleware.js
-      auth.routes.js
-  post/
-      post.controller.js
-      post.middleware.js
-      post.routes.js
-  index.js
-config/
-  db.js
-  swagger.js
-prisma/
-  schema.prisma
-  seed.js
-  migrations/
+```bash
+npm start
 ```
 
-> The authentication feature is organized in its own `src/auth` module so routes, middleware, and controllers stay grouped together.
+The default API base URL is `http://localhost:5000`. Swagger documentation is available at `http://localhost:5000/api-docs`.
 
+## API modules
+
+Routes are mounted under these prefixes:
+
+| Module | Route prefix |
+| --- | --- |
+| Authentication | `/api/auth` |
+| Tasks | `/api/tasks` |
+| Projects | `/api/projects` |
+| Users | `/api/users` |
+| Dashboard | `/api/dashboard` |
+| Comments | `/api/comments` |
+| Notifications | `/api/notifications` |
+| Plans | `/api/plans` |
+| Subscriptions | `/api/subscriptions` |
+
+## Project structure
+
+```text
+config/       Integration and database configuration
+middlewares/  Shared Express middleware
+prisma/       Prisma schema, migrations, and seed script
+src/          API entry point and feature modules
+utils/        Mail and token utilities
+```
