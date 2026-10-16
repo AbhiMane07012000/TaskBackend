@@ -459,18 +459,18 @@ const assignUserToTask = async (req, res) => {
       `You have been assigned to task: ${task.title}`,
     );
 
-  
-
-    return res
-      .status(200)
-      .json({ message: "User assigned to task successfully." });
-
-  await sendEmail({
+   await sendEmail({
       to: user.email,
       subject: `You have been assigned to task: ${task.title}`,
       text: `<p>Hi ${user.username}, you have been assigned to the task: ${task.title}</p><br/> Best regards,<br>The TaskFlow Team</p>   `,
       html: `<p>Hi ${user.username}, you have been assigned to the task: ${task.title}</p><br/> Best regards,<br>The TaskFlow Team</p>   `,
     });
+
+    return res
+      .status(200)
+      .json({ message: "User assigned to task successfully." });
+
+ 
   } catch (error) {
     return res.status(500).json({
       message: "Unable to assign user to task.",

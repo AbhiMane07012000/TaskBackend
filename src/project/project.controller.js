@@ -381,6 +381,7 @@ const addUserToProject = async (req, res) => {
     // Check if user exists
     const user = await prisma.user.findUnique({ where: { id: userId } });
 
+   
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
@@ -390,7 +391,7 @@ const addUserToProject = async (req, res) => {
       where: { projectId_userId: { projectId, userId } },
     });
 
-    console.log("User found:", existingProjectUser); // Debugging line
+     console.log("User found:", existingProjectUser); // Debugging line
 
     if (existingProjectUser) {
       return res
@@ -411,10 +412,6 @@ const addUserToProject = async (req, res) => {
       `You have been added to project: ${project.name}`,
     );
 
-    res
-      .status(200)
-      .json({ message: "User added to project successfully." });
-
     await sendEmail({
       to: user.email,
       subject: `You have been assigned to ${project.name}`,
@@ -422,6 +419,9 @@ const addUserToProject = async (req, res) => {
       html: `<p>Hi ${user.username}, you have been assigned to the project: ${project.name}</p><br/> <br/> Best regards,<br>The TaskFlow Team</p>   `,
     });
 
+    return res
+      .status(200)
+      .json({ message: "User added to project successfully." });
   } catch (error) {
     return res.status(500).json({
       message: "Unable to add user to project.",
