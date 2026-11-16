@@ -37,26 +37,6 @@ const { sendEmail } = require("../../utils/mailer");
  *
  *
  */
-const generateTokens = (user) => {
-  const accessToken = jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      role: user.role,
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: "3d" },
-  );
-
-  const refreshToken = jwt.sign(
-    { id: user.id },
-    process.env.JWT_REFRESH_SECRET,
-    { expiresIn: "7d" },
-  );
-
-  return { accessToken, refreshToken };
-};
 
 /**
  * @swagger
@@ -99,12 +79,20 @@ const generateTokens = (user) => {
 const register = async (req, res) => {
   const { email, password, username, role } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ message: "Email and password are required" });
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  if(!password){
+    return res.status(400).json({ message:"Password is required" })
   }
 
   const allowedRoles = ["ADMIN", "USER"];
-  const assignedRole = allowedRoles.includes(role) ? role : "USER";
+  const assignedRole = allowedRoles.includes(role) ? role : null;
+
+  if(assignedRole === null){
+    return res.status(400).json({message:"Invalid Role."})
+  }
 
   const existingUser = await prisma.user.findUnique({
     where: { email },
@@ -184,8 +172,12 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ message: "Email and password are required" });
+  if (!email ) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  if(!password){
+    return res.status(400).json({message:"Password is required"})
   }
 
   try {
@@ -409,10 +401,16 @@ const changePassword = async (req, res) => {
   const userId = req.user.id;
   const { oldPassword, newPassword } = req.body;
 
-  if (!oldPassword || !newPassword) {
+  if (!oldPassword) {
     return res
       .status(400)
-      .json({ message: "Old and new password are required" });
+      .json({ message: "Oldpassword are required" });
+  }
+
+  if (!newPassword) {
+    return res
+      .status(400)
+      .json({ message: "New password are required" });
   }
 
   if (oldPassword === newPassword) {
