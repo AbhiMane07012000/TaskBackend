@@ -3,6 +3,8 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 const swaggerUi = require("swagger-ui-express");
+const swaggerUiDist = require("swagger-ui-dist");
+const swaggerAssetsPath = swaggerUiDist.getAbsoluteFSPath();
 const morgan = require('morgan');
 
 
@@ -45,14 +47,23 @@ app.use("/api/subscriptions", subscriptionRoutes);
 
 // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// Swagger JSON
 app.get("/api-docs.json", (req, res) => {
   res.json(swaggerSpec);
 });
 
-// Swagger UI
+// Serve Swagger UI static assets explicitly
 app.use(
   "/api-docs",
-  swaggerUi.serve,
+  express.static(swaggerAssetsPath, {
+    index: false,
+    fallthrough: true,
+  })
+);
+
+// Serve Swagger UI HTML
+app.use(
+  "/api-docs",
   swaggerUi.setup(swaggerSpec, {
     explorer: true,
     customSiteTitle: "TaskBackend API Documentation",
