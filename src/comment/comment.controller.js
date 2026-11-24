@@ -71,7 +71,7 @@ const createComment = async (req, res) => {
       });
 
       if (user) {
-        const taskUser = await prisma.task_User.findFirst({
+        const taskUser = await prisma.taskUser.findFirst({
           where: { taskId, userId: user.id },
         });
 

@@ -5,6 +5,11 @@ const jwt = require("jsonwebtoken");
 const app = require("../../src/app");
 const prisma = require("../../config/db");
 const { sendEmail } = require("../../utils/mailer");
+const { ipKeyGenerator } = require("express-rate-limit");
+const {
+  loginRateLimiter,
+  registerRateLimiter,
+} = require("../../middlewares/authRateLimit.middleware");
 
 jest.mock("../../utils/mailer", () => ({
   sendEmail: jest.fn().mockResolvedValue({
@@ -13,6 +18,14 @@ jest.mock("../../utils/mailer", () => ({
 }));
 
 describe("Auth API", () => {
+  afterEach(async () => {
+    const testIp = ipKeyGenerator("::ffff:127.0.0.1");
+    await Promise.all([
+      loginRateLimiter.resetKey(testIp),
+      registerRateLimiter.resetKey(testIp),
+    ]);
+  });
+
   beforeAll(async () => {
     process.env.JWT_SECRET = "test-access-secret";
     process.env.JWT_REFRESH_SECRET = "test-refresh-secret";

@@ -387,7 +387,7 @@ const addUserToProject = async (req, res) => {
     }
 
     // Check if user is already in the project
-    const existingProjectUser = await prisma.ProjectUser.findUnique({
+    const existingProjectUser = await prisma.projectUser.findUnique({
       where: { projectId_userId: { projectId, userId } },
     });
 
@@ -496,7 +496,7 @@ const getProjectsUser = async (req, res) => {
         user: {
           select: {
             id: true,
-            name: true,
+            username: true,
             email: true,
             role: true,
           },
