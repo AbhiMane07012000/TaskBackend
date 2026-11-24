@@ -1,4 +1,6 @@
+
 const swaggerJsdoc = require("swagger-jsdoc");
+const path = require("path");
 
 const options = {
   definition: {
@@ -6,7 +8,7 @@ const options = {
     info: {
       title: "Task Management API",
       version: "1.0.0",
-      description: "API documentation",
+      description: "TaskBackend REST API Documentation",
     },
     components: {
       securitySchemes: {
@@ -17,9 +19,18 @@ const options = {
         },
       },
     },
-    security: [{ bearerAuth: [] , }],
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
-  apis: ["./src/**/*.js"],
+
+  apis: [
+    path.join(__dirname, "../src/**/*.js"),
+  ],
 };
 
-module.exports = swaggerJsdoc(options);
+const swaggerSpec = swaggerJsdoc(options);
+
+module.exports = swaggerSpec;
