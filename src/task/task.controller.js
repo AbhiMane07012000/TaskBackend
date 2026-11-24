@@ -115,7 +115,7 @@ const createTask = async (req, res) => {
     }
 
     if (req.user.role !== "ADMIN" && project.createdById !== req.user.id) {
-      const projectUser = await prisma.project_User.findUnique({
+      const projectUser = await prisma.projectUser.findUnique({
         where: { projectId_userId: { projectId, userId: req.user.id } },
       });
 
@@ -303,7 +303,7 @@ const updateTask = async (req, res) => {
     });
 
     if (status && oldtask.status !== status) {
-      const taskUsers = await prisma.task_User.findMany({
+      const taskUsers = await prisma.taskUser.findMany({
         where: { taskId: id },
       });
 
@@ -621,7 +621,7 @@ const getTaskAssignees = async (req, res) => {
         user: {
           select: {
             id: true,
-            name: true,
+            username: true,
             email: true,
             role: true,
           },
